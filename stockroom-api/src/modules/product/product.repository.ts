@@ -1,20 +1,7 @@
 import { Prisma, Product } from "@prisma/client";
 import { prisma } from "../../config";
 import { CreateProductDto, ListProductQuery, UpdateProductDto } from "./product.interface";
-
-const productListSelect = {
-  id: true,
-  sku: true,
-  name: true,
-  unit: true,
-  price: true,
-  createdAt: true,
-  updatedAt: true,
-} satisfies Prisma.ProductSelect;
-
-type ProductListItem = Prisma.ProductGetPayload<{
-  select: typeof productListSelect;
-}>;
+import { ProductListItem, productListSelect } from "./product.types";
 
 export const productRepository = {
   count(): Promise<number> {

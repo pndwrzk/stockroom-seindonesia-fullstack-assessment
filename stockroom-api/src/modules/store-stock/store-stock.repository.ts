@@ -4,15 +4,7 @@ import {
   CreateStoreStockDto,
   ListStoreStockQuery,
 } from "./store-stock.interface";
-
-const stockInclude = {
-  store: { select: { id: true, code: true, name: true } },
-  product: { select: { id: true, sku: true, name: true, unit: true, price: true } },
-} satisfies Prisma.StoreStockInclude;
-
-export type StoreStockDetail = Prisma.StoreStockGetPayload<{
-  include: typeof stockInclude;
-}>;
+import { stockInclude, StoreStockDetail } from "./store-stock.types";
 
 export const storeStockRepository = {
   create(data: CreateStoreStockDto): Promise<StoreStockDetail> {

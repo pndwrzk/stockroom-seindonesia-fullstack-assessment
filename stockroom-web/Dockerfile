@@ -12,7 +12,7 @@ COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN if [ ! -f .env.local ]; then cp .env.example .env.local; fi \
+RUN if [ ! -f .env ]; then cp env.example .env; fi \
     && npm run build
 
 FROM node:24-bookworm-slim AS runner

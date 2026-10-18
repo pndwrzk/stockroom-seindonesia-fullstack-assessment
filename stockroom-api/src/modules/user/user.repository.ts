@@ -2,18 +2,7 @@ import { Prisma, User } from "@prisma/client";
 import { prisma } from "../../config";
 import { ROLES } from "../../constants/roles";
 import { CreateUserDto, ListUserQuery, UpdateUserDto } from "./user.interface";
-
-const userInclude = {
-  store: { select: { id: true, code: true, name: true } },
-} satisfies Prisma.UserInclude;
-
-
-const safeOmit = { password: true } satisfies Prisma.UserOmit;
-
-export type UserWithStore = Prisma.UserGetPayload<{
-  include: typeof userInclude;
-  omit: typeof safeOmit;
-}>;
+import { safeOmit, userInclude, UserWithStore } from "./user.types";
 
 export const userRepository = {
   count(storeId?: string): Promise<number> {

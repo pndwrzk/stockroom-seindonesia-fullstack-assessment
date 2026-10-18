@@ -11,13 +11,13 @@ import {
   ReviewStockOpnameDto,
   SubmitStockOpnameItemsDto,
 } from "./stock-opname.interface";
+import { stockOpnameRepository } from "./stock-opname.repository";
 import {
-  stockOpnameRepository,
   StockOpnameDetail,
   StockOpnameItem,
   StockOpnameResponse,
   StockOpnameTransactionRepository,
-} from "./stock-opname.repository";
+} from "./stock-opname.types";
 
 const assertCanSubmit = (status: number): void => {
   if (
@@ -341,18 +341,18 @@ export const stockOpnameService = {
       }
 
       if (status === OPNAME_STATUS.APPROVED) {
-        for (const item of countedItems) {
-          const updateCount = await repository.updateStoreStockQuantity(
-            opname.storeId,
-            item.productId,
-            item.countedQty,
+        const updateCount = await repository.updateStoreStockQuantities(
+          opname.storeId,
+          countedItems.map(({ productId, countedQty }) => ({
+            productId,
+            quantity: countedQty,
+          })),
+        );
+        if (updateCount !== countedItems.length) {
+          throw new ApiError(
+            409,
+            "Store stock records changed; please retry",
           );
-          if (updateCount !== 1) {
-            throw new ApiError(
-              409,
-              "Store stock records changed; please retry",
-            );
-          }
         }
       }
 

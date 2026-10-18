@@ -7,10 +7,8 @@ import {
   CreateStoreStockDto,
   ListStoreStockQuery,
 } from "./store-stock.interface";
-import {
-  storeStockRepository,
-  StoreStockDetail,
-} from "./store-stock.repository";
+import { storeStockRepository } from "./store-stock.repository";
+import { StoreStockDetail } from "./store-stock.types";
 
 const getOrFail = async (id: string): Promise<StoreStockDetail> => {
   const stock = await storeStockRepository.findById(id);

@@ -1,128 +1,18 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../../config";
+import { ACTIVE_OPNAME_STATUSES, OPNAME_STATUS } from "../../constants/stock-opname";
 import {
-  ACTIVE_OPNAME_STATUSES,
-  OPNAME_STATUS,
-  OpnameScope,
-} from "../../constants/stock-opname";
-
-const detailInclude = {
-  store: { select: { id: true, code: true, name: true } },
-  initiator: { select: { id: true, name: true } },
-  histories: {
-    select: {
-      id: true,
-      fromStatus: true,
-      toStatus: true,
-      note: true,
-      createdAt: true,
-      user: { select: { id: true, name: true } },
-    },
-    orderBy: { createdAt: "asc" },
-  },
-} satisfies Prisma.StockOpnameInclude;
-
-const createInclude = {
-  ...detailInclude,
-  items: {
-    select: {
-      id: true,
-      productId: true,
-      systemQty: true,
-      countedQty: true,
-      product: { select: { id: true, sku: true, name: true, unit: true } },
-    },
-    orderBy: { product: { sku: "asc" } },
-  },
-} satisfies Prisma.StockOpnameInclude;
-
-const listSelect = {
-  id: true,
-  sessionNumber: true,
-  storeId: true,
-  scope: true,
-  status: true,
-  initiatedBy: true,
-  initiatedAt: true,
-  createdAt: true,
-  updatedAt: true,
-  store: { select: { id: true, code: true, name: true } },
-  initiator: { select: { id: true, name: true } },
-  _count: { select: { items: true } },
-} satisfies Prisma.StockOpnameSelect;
-
-const itemSelect = {
-  id: true,
-  productId: true,
-  systemQty: true,
-  countedQty: true,
-  product: { select: { id: true, sku: true, name: true, unit: true } },
-} satisfies Prisma.StockOpnameItemSelect;
-
-export type StockOpnameDetail = Prisma.StockOpnameGetPayload<{
-  include: typeof createInclude;
-}>;
-export type StockOpnameResponse = Prisma.StockOpnameGetPayload<{
-  include: typeof detailInclude;
-}>;
-export type StockOpnameListItem = Prisma.StockOpnameGetPayload<{
-  select: typeof listSelect;
-}>;
-export type StockOpnameItem = Prisma.StockOpnameItemGetPayload<{
-  select: typeof itemSelect;
-}>;
-
-export interface CreateStockOpnameData {
-  sessionNumber: string;
-  storeId: string;
-  scope: OpnameScope;
-  note?: string;
-  initiatedBy: string;
-  items: { productId: string; systemQty: number }[];
-}
-
-export interface StockOpnameTransactionRepository {
-  findForSubmit(
-    id: string,
-  ): Promise<{ status: number; storeId: string } | null>;
-  findItemProductIds(
-    stockOpnameId: string,
-    productIds: string[],
-  ): Promise<string[]>;
-  updateCountedQuantities(
-    stockOpnameId: string,
-    items: { productId: string; countedQty: number }[],
-  ): Promise<void>;
-  countUncountedItems(stockOpnameId: string): Promise<number>;
-  findForReview(
-    id: string,
-  ): Promise<{
-    status: number;
-    storeId: string;
-    items: { productId: string; countedQty: number | null }[];
-  } | null>;
-  updateStatus(
-    id: string,
-    from: number,
-    to: number,
-  ): Promise<boolean>;
-  findStoreStockProductIds(
-    storeId: string,
-    productIds: string[],
-  ): Promise<string[]>;
-  updateStoreStockQuantity(
-    storeId: string,
-    productId: string,
-    quantity: number,
-  ): Promise<number>;
-  createHistory(data: {
-    opnameId: string;
-    fromStatus: number | null;
-    toStatus: number;
-    userId: string;
-    note?: string;
-  }): Promise<void>;
-}
+  CreateStockOpnameData,
+  createInclude,
+  detailInclude,
+  itemSelect,
+  listSelect,
+  StockOpnameDetail,
+  StockOpnameItem,
+  StockOpnameListItem,
+  StockOpnameResponse,
+  StockOpnameTransactionRepository,
+} from "./stock-opname.types";
 
 export const stockOpnameRepository = {
   async countByStatus(storeId?: string): Promise<{ status: number; total: number }[]> {
@@ -195,12 +85,23 @@ export const stockOpnameRepository = {
             });
             return stocks.map((stock) => stock.productId);
           },
-          updateStoreStockQuantity: async (storeId, productId, quantity) => {
-            const result = await tx.storeStock.updateMany({
-              where: { storeId, productId },
-              data: { quantity },
-            });
-            return result.count;
+          updateStoreStockQuantities: (storeId, items) => {
+            if (items.length === 0) return Promise.resolve(0);
+
+            const values = Prisma.join(
+              items.map(
+                (item) =>
+                  Prisma.sql`(${item.productId}::uuid, ${item.quantity})`,
+              ),
+            );
+            return tx.$executeRaw`
+              UPDATE store_stock AS stock
+              SET quantity = updates.quantity,
+                  updated_at = CURRENT_TIMESTAMP
+              FROM (VALUES ${values}) AS updates(product_id, quantity)
+              WHERE stock.store_id = ${storeId}::uuid
+                AND stock.product_id = updates.product_id
+            `;
           },
           createHistory: async (data) => {
             await tx.stockOpnameHistory.create({ data });

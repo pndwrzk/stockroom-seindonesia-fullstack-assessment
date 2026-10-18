@@ -3,7 +3,8 @@ import { storeRepository } from "../store/store.repository";
 import { ApiError } from "../../utils/ApiError";
 import { hashPassword } from "../../utils/password";
 import { CreateUserDto, ListUserQuery, UpdateUserDto } from "./user.interface";
-import { userRepository, UserWithStore } from "./user.repository";
+import { userRepository } from "./user.repository";
+import { UserWithStore } from "./user.types";
 import { AuthUser } from "../../types/auth";
 
 const getOrFail = async (id: string): Promise<UserWithStore> => {
