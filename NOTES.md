@@ -14,6 +14,9 @@ Saya menggunakan sesi Stock Opname agar proses penghitungan memiliki toko tujuan
 
 Saya menerapkan status `initiated`, `in_progress`, `submitted`, `approved`, `rejected`, dan `needs_revision` untuk menggambarkan tahapan proses. Inventory hanya diperbarui setelah Manager menyetujui hasil penghitungan agar stok tidak berubah sebelum hasilnya ditinjau.
 
+### Bulk Upload Stock Opname Items
+Saya menambahkan fitur bulk upload menggunakan file CSV agar Staff dapat mengirimkan hasil penghitungan banyak produk sekaligus tanpa harus menginputnya satu per satu. Sistem memvalidasi format file dan data produk sebelum menyimpan hasil penghitungan. Fitur ini membantu mempercepat proses Stock Opname, mengurangi pekerjaan manual, dan meminimalkan kesalahan input.
+
 ### Frontend and Access Control
 
 Saya membedakan fitur berdasarkan role agar setiap pengguna hanya mengakses fungsi yang relevan. Validasi juga perlu dilakukan di backend untuk mencegah pengguna mengakses atau mengubah data di luar kewenangannya.
@@ -46,7 +49,6 @@ Saya mengizinkan nilai kosong saat penghitungan berlangsung, tetapi Manager tida
 Saya mempertimbangkan beberapa kondisi seperti approval berulang, produk yang belum dihitung, data inventory yang tidak ditemukan, dan Manager yang mencoba mengakses sesi dari toko lain. Saya menangani kondisi tersebut melalui validasi status sesi, kelengkapan penghitungan, keberadaan data inventory, dan hak akses berdasarkan role serta toko. Selain itu, transaksi database digunakan untuk menjaga konsistensi data jika terjadi kegagalan saat proses approval.
 
 
-## 5. What is one thing you added to this project that you think is important?
-Why?
+## 5. What is one thing you added to this project that you think is important? Why?
 
 Saya menambahkan fitur history untuk mencatat setiap perubahan status Stock Opname, termasuk status sebelumnya, status baru, pengguna yang melakukan perubahan, dan catatan terkait. Menurut saya, fitur ini penting agar setiap proses dapat ditelusuri, memudahkan pemeriksaan jika terjadi masalah, dan meningkatkan transparansi serta akuntabilitas dalam pengelolaan stok.

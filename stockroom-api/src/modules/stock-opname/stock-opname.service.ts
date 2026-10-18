@@ -135,8 +135,7 @@ export const stockOpnameService = {
         systemQty: s.quantity,
       })),
     });
-    // Pengecekan di atas hanya untuk gagal cepat; yang menjamin tidak ada dua
-    // sesi aktif adalah pengecekan di dalam transaksi (lihat repository).
+
     if (!created) {
       throw new ApiError(409, "This store already has an active stock opname");
     }
