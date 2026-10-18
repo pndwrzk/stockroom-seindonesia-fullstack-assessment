@@ -67,21 +67,21 @@ Routes are defined in `app/`, while feature implementations such as components, 
 
    Replace this URL with the address of your backend. The backend must provide API endpoints under `/api/v1`. If this variable is not set, the app uses `http://localhost:3000` as the default API URL.
 
-3. Start the development server:
+3. Start the development server on port `3001`:
 
    ```bash
    npm run dev
    ```
 
-4. Open [http://localhost:3000](http://localhost:3000). You will need a valid account on the backend to sign in.
+4. Open [http://localhost:3001](http://localhost:3001). The backend API is expected at `http://localhost:3000`; you will need a valid account on it to sign in.
 
 ## Available Commands
 
 ```bash
-npm run dev    # Start the development server
+npm run dev    # Start the development server on port 3001
 npm run lint   # Run ESLint
 npm run build  # Create a production build
-npm run start  # Start the production server
+npm run start  # Start the production server on port 3001
 ```
 
-To run the app locally in production mode, run `npm run build` first, then `npm run start`.
+To run the app locally in production mode, run `npm run build` first, then `npm run start`; open [http://localhost:3001](http://localhost:3001). When using Docker Compose from the repository root, the web app is also available on port `3001`, while the API and API docs are on port `3000` at `/api/v1` and `/api-docs`, respectively.
