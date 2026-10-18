@@ -1,0 +1,1437 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Stock Opname API",
+    "version": "1.0.0",
+    "description": "OpenAPI documentation for the Stock Opname API."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000/api/v1",
+      "description": "Local development server"
+    }
+  ],
+  "tags": [
+    { "name": "Auth" },
+    { "name": "Products" },
+    { "name": "Stores" },
+    { "name": "Users" },
+    { "name": "Store Stocks" },
+    { "name": "Stock Opnames" }
+  ],
+  "security": [
+    { "bearerAuth": [] }
+  ],
+  "paths": {
+    "/auth/login": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Login",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/LoginRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/LoginResponse" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Refresh access and refresh tokens",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RefreshRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Tokens refreshed",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TokenResponse" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "tags": ["Auth"],
+        "summary": "Get authenticated user",
+        "responses": {
+          "200": {
+            "description": "Current user",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserResponse" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/products/count": {
+      "get": {
+        "tags": ["Products"],
+        "summary": "Count products",
+        "responses": {
+          "200": {
+            "description": "Product count",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CountResponse" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/products": {
+      "get": {
+        "tags": ["Products"],
+        "summary": "List products",
+        "parameters": [
+          { "$ref": "#/components/parameters/Page" },
+          { "$ref": "#/components/parameters/Limit" },
+          { "$ref": "#/components/parameters/Search" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated product list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessResponse" },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": { "$ref": "#/components/schemas/Product" }
+                        },
+                        "meta": { "$ref": "#/components/schemas/PaginationMeta" }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      },
+      "post": {
+        "tags": ["Products"],
+        "summary": "Create product",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ProductInput" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Product created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ProductResponse" }
+              }
+            }
+          },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      }
+    },
+    "/products/{id}": {
+      "parameters": [{ "$ref": "#/components/parameters/UuidId" }],
+      "get": {
+        "tags": ["Products"],
+        "summary": "Get product by ID",
+        "responses": {
+          "200": {
+            "description": "Product detail",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ProductResponse" }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      },
+      "patch": {
+        "tags": ["Products"],
+        "summary": "Update product",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ProductUpdate" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Product updated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ProductResponse" }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      },
+      "delete": {
+        "tags": ["Products"],
+        "summary": "Delete product",
+        "responses": {
+          "200": { "$ref": "#/components/responses/Deleted" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" }
+        }
+      }
+    },
+    "/stores/count": {
+      "get": {
+        "tags": ["Stores"],
+        "summary": "Count stores",
+        "responses": {
+          "200": {
+            "description": "Store count",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CountResponse" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/stores": {
+      "get": {
+        "tags": ["Stores"],
+        "summary": "List stores",
+        "parameters": [
+          { "$ref": "#/components/parameters/Page" },
+          { "$ref": "#/components/parameters/Limit" },
+          { "$ref": "#/components/parameters/Search" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated store list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessResponse" },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": { "$ref": "#/components/schemas/Store" }
+                        },
+                        "meta": { "$ref": "#/components/schemas/PaginationMeta" }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      },
+      "post": {
+        "tags": ["Stores"],
+        "summary": "Create store",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/StoreInput" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Store created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/StoreResponse" }
+              }
+            }
+          },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      }
+    },
+    "/stores/{id}": {
+      "parameters": [{ "$ref": "#/components/parameters/UuidId" }],
+      "get": {
+        "tags": ["Stores"],
+        "summary": "Get store by ID",
+        "responses": {
+          "200": {
+            "description": "Store detail",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/StoreResponse" }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      },
+      "patch": {
+        "tags": ["Stores"],
+        "summary": "Update store",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/StoreUpdate" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Store updated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/StoreResponse" }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      },
+      "delete": {
+        "tags": ["Stores"],
+        "summary": "Delete store",
+        "responses": {
+          "200": { "$ref": "#/components/responses/Deleted" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" }
+        }
+      }
+    },
+    "/users/count": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Count users",
+        "description": "OWNER counts all non-owner users. MANAGER and STAFF count non-owner users in their own store.",
+        "responses": {
+          "200": {
+            "description": "User count",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CountResponse" }
+              }
+            }
+          },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      }
+    },
+    "/users": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "List users",
+        "description": "OWNER sees all non-owner users. MANAGER and STAFF are scoped to their own store.",
+        "parameters": [
+          { "$ref": "#/components/parameters/Page" },
+          { "$ref": "#/components/parameters/Limit" },
+          { "$ref": "#/components/parameters/Search" },
+          {
+            "name": "role",
+            "in": "query",
+            "schema": { "type": "integer", "enum": [1, 2, 3] }
+          },
+          {
+            "name": "storeId",
+            "in": "query",
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated user list (password omitted)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessResponse" },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": { "$ref": "#/components/schemas/User" }
+                        },
+                        "meta": { "$ref": "#/components/schemas/PaginationMeta" }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      },
+      "post": {
+        "tags": ["Users"],
+        "summary": "Create user",
+        "description": "OWNER or MANAGER. MANAGER can create only in their own store; role availability is constrained by the service rules.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UserInput" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserResponse" }
+              }
+            }
+          },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      }
+    },
+    "/users/{id}": {
+      "parameters": [{ "$ref": "#/components/parameters/UuidId" }],
+      "get": {
+        "tags": ["Users"],
+        "summary": "Get user by ID",
+        "responses": {
+          "200": {
+            "description": "User detail (password omitted)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserResponse" }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      },
+      "patch": {
+        "tags": ["Users"],
+        "summary": "Update user",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UserUpdate" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User updated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserResponse" }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      },
+      "delete": {
+        "tags": ["Users"],
+        "summary": "Delete user",
+        "description": "OWNER users cannot be deleted.",
+        "responses": {
+          "200": { "$ref": "#/components/responses/Deleted" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      }
+    },
+    "/store-stocks": {
+      "get": {
+        "tags": ["Store Stocks"],
+        "summary": "List store stocks",
+        "description": "MANAGER and STAFF are scoped to their own store.",
+        "parameters": [
+          { "$ref": "#/components/parameters/Page" },
+          { "$ref": "#/components/parameters/Limit" },
+          { "$ref": "#/components/parameters/Search" },
+          {
+            "name": "storeId",
+            "in": "query",
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "productId",
+            "in": "query",
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated store stock list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessResponse" },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": { "$ref": "#/components/schemas/StoreStock" }
+                        },
+                        "meta": { "$ref": "#/components/schemas/PaginationMeta" }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      },
+      "post": {
+        "tags": ["Store Stocks"],
+        "summary": "Create store stock",
+        "description": "OWNER or MANAGER. MANAGER can create stock only for their own store.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/StoreStockInput" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Store stock created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/StoreStockResponse" }
+              }
+            }
+          },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      }
+    },
+    "/store-stocks/{id}": {
+      "parameters": [{ "$ref": "#/components/parameters/UuidId" }],
+      "get": {
+        "tags": ["Store Stocks"],
+        "summary": "Get store stock by ID",
+        "responses": {
+          "200": {
+            "description": "Store stock detail",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/StoreStockResponse" }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      },
+      "delete": {
+        "tags": ["Store Stocks"],
+        "summary": "Delete store stock",
+        "responses": {
+          "200": { "$ref": "#/components/responses/Deleted" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" }
+        }
+      }
+    },
+    "/stock-opnames/count": {
+      "get": {
+        "tags": ["Stock Opnames"],
+        "summary": "Count stock opnames by status",
+        "description": "OWNER receives global counts. MANAGER and STAFF receive counts scoped to their own store. Status: 0 INITIATED, 1 IN_PROGRESS, 2 SUBMITTED, 3 APPROVED, 4 REJECTED.",
+        "responses": {
+          "200": {
+            "description": "Counts for every status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessResponse" },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": { "$ref": "#/components/schemas/StatusCount" }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      }
+    },
+    "/stock-opnames": {
+      "get": {
+        "tags": ["Stock Opnames"],
+        "summary": "List stock opnames",
+        "description": "OWNER sees all opnames; MANAGER and STAFF are scoped to their own store.",
+        "parameters": [
+          { "$ref": "#/components/parameters/Page" },
+          { "$ref": "#/components/parameters/Limit" },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": { "type": "integer", "enum": [0, 1, 2, 3, 4] }
+          },
+          {
+            "name": "storeId",
+            "in": "query",
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Case-insensitive partial search by session number.",
+            "schema": { "type": "string", "minLength": 1, "maxLength": 100 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated stock opname list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessResponse" },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": { "$ref": "#/components/schemas/StockOpnameListItem" }
+                        },
+                        "meta": { "$ref": "#/components/schemas/PaginationMeta" }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      },
+      "post": {
+        "tags": ["Stock Opnames"],
+        "summary": "Initiate stock opname",
+        "description": "OWNER or MANAGER. MANAGER can initiate only for their own store.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/StockOpnameInput" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Stock opname initiated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/StockOpnameCreateResponse" }
+              }
+            }
+          },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      }
+    },
+    "/stock-opnames/{id}/item": {
+      "parameters": [{ "$ref": "#/components/parameters/UuidId" }],
+      "get": {
+        "tags": ["Stock Opnames"],
+        "summary": "List items in stock opname",
+        "parameters": [
+          { "$ref": "#/components/parameters/Page" },
+          { "$ref": "#/components/parameters/Limit" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated item list, product includes unit",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessResponse" },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": { "$ref": "#/components/schemas/StockOpnameItem" }
+                        },
+                        "meta": { "$ref": "#/components/schemas/PaginationMeta" }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      }
+    },
+    "/stock-opnames/{id}/items/submit": {
+      "parameters": [{ "$ref": "#/components/parameters/UuidId" }],
+      "patch": {
+        "tags": ["Stock Opnames"],
+        "summary": "Submit counted quantities",
+        "description": "Route middleware currently permits STAFF. Multiple products can be submitted at once. Optional note is recorded in history. First submission changes status to IN_PROGRESS; when every item has countedQty, status changes to SUBMITTED. REJECTED opnames can be resubmitted.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SubmitStockOpnameItemsInput" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Counted quantities submitted",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SubmitStockOpnameItemsResponse" }
+              }
+            }
+          },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      }
+    },
+    "/stock-opnames/{id}/approve": {
+      "parameters": [{ "$ref": "#/components/parameters/UuidId" }],
+      "post": {
+        "tags": ["Stock Opnames"],
+        "summary": "Approve stock opname",
+        "description": "OWNER or MANAGER; MANAGER can review only opnames for their own store. Only SUBMITTED opnames can be approved. Approval updates store stock quantities from countedQty.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ReviewInput" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Stock opname approved",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/StockOpnameResponse" }
+              }
+            }
+          },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      }
+    },
+    "/stock-opnames/{id}/reject": {
+      "parameters": [{ "$ref": "#/components/parameters/UuidId" }],
+      "post": {
+        "tags": ["Stock Opnames"],
+        "summary": "Reject stock opname",
+        "description": "OWNER or MANAGER; MANAGER can review only opnames for their own store. Only SUBMITTED opnames can be rejected.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ReviewInput" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Stock opname rejected",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/StockOpnameResponse" }
+              }
+            }
+          },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      }
+    },
+    "/stock-opnames/{id}": {
+      "parameters": [{ "$ref": "#/components/parameters/UuidId" }],
+      "get": {
+        "tags": ["Stock Opnames"],
+        "summary": "Get stock opname detail",
+        "description": "Returns the opname, store, initiator, and status history. Items are available from the paginated /item endpoint.",
+        "responses": {
+          "200": {
+            "description": "Stock opname detail with history",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/StockOpnameResponse" }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      },
+      "delete": {
+        "tags": ["Stock Opnames"],
+        "summary": "Delete stock opname",
+        "description": "OWNER only. Deletion is allowed only for INITIATED, REJECTED, or APPROVED status.",
+        "responses": {
+          "200": { "$ref": "#/components/responses/Deleted" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "parameters": {
+      "UuidId": {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "string", "format": "uuid" }
+      },
+      "Page": {
+        "name": "page",
+        "in": "query",
+        "schema": { "type": "integer", "minimum": 1, "default": 1 }
+      },
+      "Limit": {
+        "name": "limit",
+        "in": "query",
+        "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 10 }
+      },
+      "Search": {
+        "name": "search",
+        "in": "query",
+        "schema": { "type": "string" }
+      }
+    },
+    "responses": {
+      "Unauthorized": {
+        "description": "Missing, malformed, invalid, or expired authentication token",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "Insufficient role or access to the requested store",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Requested resource not found",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      },
+      "Conflict": {
+        "description": "Request conflicts with current data or resource state",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      },
+      "ValidationError": {
+        "description": "Request validation failed",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      },
+      "Deleted": {
+        "description": "Resource deleted",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/DeletedResponse" }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "SuccessResponse": {
+        "type": "object",
+        "required": ["success", "message", "data"],
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "message": { "type": "string" },
+          "data": {}
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "required": ["success", "message"],
+        "properties": {
+          "success": { "type": "boolean", "example": false },
+          "message": { "type": "string" },
+          "errors": { "type": "array", "items": {} }
+        }
+      },
+      "PaginationMeta": {
+        "type": "object",
+        "required": ["page", "limit", "total", "totalPages"],
+        "properties": {
+          "page": { "type": "integer" },
+          "limit": { "type": "integer" },
+          "total": { "type": "integer" },
+          "totalPages": { "type": "integer" }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "required": ["username", "password"],
+        "properties": {
+          "username": { "type": "string", "minLength": 1 },
+          "password": { "type": "string", "minLength": 1, "maxLength": 72 }
+        }
+      },
+      "RefreshRequest": {
+        "type": "object",
+        "required": ["refreshToken"],
+        "properties": { "refreshToken": { "type": "string", "minLength": 1 } }
+      },
+      "TokenResponse": {
+        "allOf": [
+          { "$ref": "#/components/schemas/SuccessResponse" },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "object",
+                "required": ["accessToken", "refreshToken"],
+                "properties": {
+                  "accessToken": { "type": "string" },
+                  "refreshToken": { "type": "string" }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "LoginResponse": {
+        "allOf": [
+          { "$ref": "#/components/schemas/SuccessResponse" },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "accessToken": { "type": "string" },
+                  "refreshToken": { "type": "string" },
+                  "user": { "$ref": "#/components/schemas/User" }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "CountResponse": {
+        "allOf": [
+          { "$ref": "#/components/schemas/SuccessResponse" },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "object",
+                "required": ["total"],
+                "properties": { "total": { "type": "integer" } }
+              }
+            }
+          }
+        ]
+      },
+      "ProductInput": {
+        "type": "object",
+        "required": ["sku", "name", "price"],
+        "properties": {
+          "sku": { "type": "string", "minLength": 1, "maxLength": 50 },
+          "name": { "type": "string", "minLength": 1, "maxLength": 255 },
+          "unit": { "type": "string", "minLength": 1, "maxLength": 50, "default": "pcs" },
+          "price": { "type": "number", "minimum": 0 }
+        }
+      },
+      "ProductUpdate": {
+        "type": "object",
+        "minProperties": 1,
+        "description": "At least one field is required.",
+        "properties": {
+          "sku": { "type": "string", "minLength": 1, "maxLength": 50 },
+          "name": { "type": "string", "minLength": 1, "maxLength": 255 },
+          "unit": { "type": "string", "minLength": 1, "maxLength": 50 },
+          "price": { "type": "number", "minimum": 0 }
+        }
+      },
+      "Product": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "sku": { "type": "string" },
+          "name": { "type": "string" },
+          "unit": { "type": "string" },
+          "price": { "type": "string", "description": "Prisma Decimal serialized as string." },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "ProductResponse": {
+        "allOf": [
+          { "$ref": "#/components/schemas/SuccessResponse" },
+          {
+            "type": "object",
+            "properties": { "data": { "$ref": "#/components/schemas/Product" } }
+          }
+        ]
+      },
+      "StoreInput": {
+        "type": "object",
+        "required": ["code", "name", "address"],
+        "properties": {
+          "code": { "type": "string", "minLength": 1, "maxLength": 50 },
+          "name": { "type": "string", "minLength": 1, "maxLength": 255 },
+          "address": { "type": "string", "minLength": 1 }
+        }
+      },
+      "StoreUpdate": {
+        "type": "object",
+        "minProperties": 1,
+        "properties": {
+          "code": { "type": "string", "minLength": 1, "maxLength": 50 },
+          "name": { "type": "string", "minLength": 1, "maxLength": 255 },
+          "address": { "type": "string", "minLength": 1 }
+        }
+      },
+      "Store": {
+        "allOf": [
+          { "$ref": "#/components/schemas/StoreInput" },
+          {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string", "format": "uuid" },
+              "createdAt": { "type": "string", "format": "date-time" },
+              "updatedAt": { "type": "string", "format": "date-time" }
+            }
+          }
+        ]
+      },
+      "StoreResponse": {
+        "allOf": [
+          { "$ref": "#/components/schemas/SuccessResponse" },
+          {
+            "type": "object",
+            "properties": { "data": { "$ref": "#/components/schemas/Store" } }
+          }
+        ]
+      },
+      "UserInput": {
+        "type": "object",
+        "required": ["nik", "username", "password", "name", "role"],
+        "properties": {
+          "nik": { "type": "string", "minLength": 1, "maxLength": 50 },
+          "username": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 50,
+            "pattern": "^[a-z0-9._-]+$"
+          },
+          "password": { "type": "string", "maxLength": 72 },
+          "name": { "type": "string", "minLength": 1, "maxLength": 255 },
+          "role": { "type": "integer", "enum": [1, 2, 3], "description": "1 OWNER, 2 MANAGER, 3 STAFF." },
+          "storeId": { "type": "string", "format": "uuid", "nullable": true }
+        }
+      },
+      "UserUpdate": {
+        "type": "object",
+        "minProperties": 1,
+        "properties": {
+          "nik": { "type": "string", "minLength": 1, "maxLength": 50 },
+          "username": { "type": "string", "minLength": 3, "maxLength": 50, "pattern": "^[a-z0-9._-]+$" },
+          "password": { "type": "string", "maxLength": 72 },
+          "name": { "type": "string", "minLength": 1, "maxLength": 255 },
+          "role": { "type": "integer", "enum": [1, 2, 3] },
+          "storeId": { "type": "string", "format": "uuid", "nullable": true }
+        }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "nik": { "type": "string" },
+          "username": { "type": "string" },
+          "name": { "type": "string" },
+          "role": { "type": "integer", "enum": [1, 2, 3] },
+          "storeId": { "type": "string", "format": "uuid", "nullable": true },
+          "store": {
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/StoreSummary" }]
+          },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "UserResponse": {
+        "allOf": [
+          { "$ref": "#/components/schemas/SuccessResponse" },
+          {
+            "type": "object",
+            "properties": { "data": { "$ref": "#/components/schemas/User" } }
+          }
+        ]
+      },
+      "StoreSummary": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "code": { "type": "string" },
+          "name": { "type": "string" }
+        }
+      },
+      "StoreStockInput": {
+        "type": "object",
+        "required": ["storeId", "productId", "quantity"],
+        "properties": {
+          "storeId": { "type": "string", "format": "uuid" },
+          "productId": { "type": "string", "format": "uuid" },
+          "quantity": { "type": "integer", "minimum": 0 }
+        }
+      },
+      "StoreStock": {
+        "allOf": [
+          { "$ref": "#/components/schemas/StoreStockInput" },
+          {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string", "format": "uuid" },
+              "createdAt": { "type": "string", "format": "date-time" },
+              "updatedAt": { "type": "string", "format": "date-time" },
+              "store": { "$ref": "#/components/schemas/StoreSummary" },
+              "product": {
+                "type": "object",
+                "properties": {
+                  "id": { "type": "string", "format": "uuid" },
+                  "sku": { "type": "string" },
+                  "name": { "type": "string" },
+                  "unit": { "type": "string" },
+                  "price": { "type": "string" }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "StoreStockResponse": {
+        "allOf": [
+          { "$ref": "#/components/schemas/SuccessResponse" },
+          {
+            "type": "object",
+            "properties": { "data": { "$ref": "#/components/schemas/StoreStock" } }
+          }
+        ]
+      },
+      "StockOpnameInput": {
+        "type": "object",
+        "required": ["scope", "storeId"],
+        "properties": {
+          "scope": { "type": "integer", "enum": [0, 1], "description": "0 selected products, 1 all products." },
+          "productIds": {
+            "type": "array",
+            "maxItems": 500,
+            "items": { "type": "string", "format": "uuid" },
+            "description": "Required and non-empty for scope 0; must be empty or omitted for scope 1."
+          },
+          "note": { "type": "string", "maxLength": 1000 },
+          "storeId": { "type": "string", "format": "uuid" }
+        }
+      },
+      "StockOpname": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "sessionNumber": { "type": "string" },
+          "storeId": { "type": "string", "format": "uuid" },
+          "scope": { "type": "integer", "enum": [0, 1] },
+          "status": { "type": "integer", "enum": [0, 1, 2, 3, 4] },
+          "initiatedBy": { "type": "string", "format": "uuid" },
+          "initiatedAt": { "type": "string", "format": "date-time" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" },
+          "store": { "$ref": "#/components/schemas/StoreSummary" },
+          "initiator": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string", "format": "uuid" },
+              "name": { "type": "string" }
+            }
+          }
+        }
+      },
+      "StockOpnameListItem": {
+        "allOf": [
+          { "$ref": "#/components/schemas/StockOpname" },
+          {
+            "type": "object",
+            "properties": { "total": { "type": "integer", "description": "Number of opname items." } }
+          }
+        ]
+      },
+      "StockOpnameHistory": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "fromStatus": { "type": "integer", "nullable": true },
+          "toStatus": { "type": "integer" },
+          "note": { "type": "string", "nullable": true },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "user": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string", "format": "uuid" },
+              "name": { "type": "string" }
+            }
+          }
+        }
+      },
+      "StockOpnameItem": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "productId": { "type": "string", "format": "uuid" },
+          "systemQty": { "type": "integer" },
+          "countedQty": { "type": "integer", "nullable": true },
+          "product": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string", "format": "uuid" },
+              "sku": { "type": "string" },
+              "name": { "type": "string" },
+              "unit": { "type": "string" }
+            }
+          }
+        }
+      },
+      "StockOpnameResponse": {
+        "allOf": [
+          { "$ref": "#/components/schemas/SuccessResponse" },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "allOf": [
+                  { "$ref": "#/components/schemas/StockOpname" },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "histories": {
+                        "type": "array",
+                        "items": { "$ref": "#/components/schemas/StockOpnameHistory" }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "StockOpnameCreateResponse": {
+        "allOf": [
+          { "$ref": "#/components/schemas/StockOpnameResponse" },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "allOf": [
+                  { "$ref": "#/components/schemas/StockOpname" },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "items": {
+                        "type": "array",
+                        "items": { "$ref": "#/components/schemas/StockOpnameItem" }
+                      },
+                      "histories": {
+                        "type": "array",
+                        "items": { "$ref": "#/components/schemas/StockOpnameHistory" }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "SubmitStockOpnameItemsInput": {
+        "type": "object",
+        "required": ["items"],
+        "properties": {
+          "items": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 500,
+            "items": {
+              "type": "object",
+              "required": ["productId", "countedQty"],
+              "properties": {
+                "productId": { "type": "string", "format": "uuid" },
+                "countedQty": { "type": "integer", "minimum": 0 }
+              }
+            }
+          },
+          "note": { "type": "string", "minLength": 1, "maxLength": 1000 }
+        }
+      },
+      "SubmitStockOpnameItemsResponse": {
+        "allOf": [
+          { "$ref": "#/components/schemas/SuccessResponse" },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "object",
+                "required": ["status", "submittedCount", "remainingCount"],
+                "properties": {
+                  "status": { "type": "integer", "enum": [1, 2] },
+                  "submittedCount": { "type": "integer" },
+                  "remainingCount": { "type": "integer" }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "ReviewInput": {
+        "type": "object",
+        "properties": { "note": { "type": "string", "maxLength": 1000 } }
+      },
+      "StatusCount": {
+        "type": "object",
+        "required": ["status", "total"],
+        "properties": {
+          "status": { "type": "integer", "enum": [0, 1, 2, 3, 4] },
+          "total": { "type": "integer" }
+        }
+      },
+      "DeletedResponse": {
+        "allOf": [
+          { "$ref": "#/components/schemas/SuccessResponse" },
+          {
+            "type": "object",
+            "properties": {
+              "data": { "type": "string", "nullable": true, "example": null }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

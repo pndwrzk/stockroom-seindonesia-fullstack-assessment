@@ -1,0 +1,2 @@
+ALTER TABLE "products"
+ADD COLUMN "unit" VARCHAR(50) NOT NULL DEFAULT 'pcs';
