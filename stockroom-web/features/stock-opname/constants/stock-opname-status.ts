@@ -4,6 +4,7 @@ export const stockOpnameStatus = {
   SUBMITTED: 2,
   APPROVED: 3,
   REJECTED: 4,
+  NEEDS_REVISION: 5,
 } as const;
 
 export type StockOpnameStatus =

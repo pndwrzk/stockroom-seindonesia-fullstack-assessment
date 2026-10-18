@@ -21,12 +21,12 @@ export const userController = {
   }),
 
   findById: catchAsync(async (req: Request, res: Response) => {
-    const user = await userService.findById(req.params.id as string);
+    const user = await userService.findById(req.user!!, req.params.id as string);
     sendSuccess(res, user, "User retrieved");
   }),
 
   update: catchAsync(async (req: Request, res: Response) => {
-    const user = await userService.update(req.params.id as string, req.body);
+    const user = await userService.update(req.user!!, req.params.id as string, req.body);
     sendSuccess(res, user, "User updated");
   }),
 

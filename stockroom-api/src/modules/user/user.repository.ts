@@ -25,7 +25,7 @@ export const userRepository = {
     });
   },
 
-  // dto.password harus sudah di-hash oleh service
+ 
   create(data: CreateUserDto): Promise<UserWithStore> {
     return prisma.user.create({
       data: {
@@ -89,7 +89,7 @@ export const userRepository = {
     return prisma.user.findUnique({ where: { username }, include: userInclude, omit: safeOmit });
   },
 
-  // HANYA untuk auth/login: mengembalikan password hash
+
   findByUsernameWithPassword(username: string): Promise<User | null> {
     return prisma.user.findUnique({ where: { username } });
   },
@@ -106,7 +106,7 @@ export const userRepository = {
     });
   },
 
-  // dto.password (kalau ada) harus sudah di-hash oleh service
+
   update(id: string, data: UpdateUserDto): Promise<UserWithStore> {
     return prisma.user.update({ where: { id }, data, include: userInclude, omit: safeOmit });
   },

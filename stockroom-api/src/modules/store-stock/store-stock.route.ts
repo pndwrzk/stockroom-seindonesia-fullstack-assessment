@@ -23,6 +23,10 @@ router
 router
   .route("/:id")
   .get(validate({ params: storeStockIdParamSchema }), storeStockController.findById)
-  .delete(validate({ params: storeStockIdParamSchema }), storeStockController.remove);
+  .delete(
+    authorize(ROLES.OWNER, ROLES.MANAGER),
+    validate({ params: storeStockIdParamSchema }),
+    storeStockController.remove,
+  );
 
 export default router;

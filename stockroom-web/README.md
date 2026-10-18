@@ -62,7 +62,7 @@ Routes are defined in `app/`, while feature implementations such as components, 
 2. Copy `.env.example` to `.env` and set the backend URL:
 
    ```env
-   NEXT_PUBLIC_API_URL=http://localhost:8080
+   NEXT_PUBLIC_API_URL=http://localhost:3000
    ```
 
    Replace this URL with the address of your backend. The backend must provide API endpoints under `/api/v1`. If this variable is not set, the app uses `http://localhost:3000` as the default API URL.

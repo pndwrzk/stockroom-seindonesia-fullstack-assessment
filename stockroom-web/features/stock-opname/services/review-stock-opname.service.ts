@@ -6,7 +6,10 @@ import {
 } from "@/features/stock-opname/schemas/stock-opnames.schema";
 import { tokenAxios } from "@/lib/axios/token-axios";
 
-export type StockOpnameReviewAction = "approve" | "reject";
+export type StockOpnameReviewAction =
+  | "approve"
+  | "reject"
+  | "request-revision";
 
 export async function reviewStockOpnameService(
   stockOpnameId: string,

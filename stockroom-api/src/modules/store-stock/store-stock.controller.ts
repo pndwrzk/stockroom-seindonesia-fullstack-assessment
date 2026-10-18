@@ -24,7 +24,7 @@ export const storeStockController = {
   }),
 
   remove: catchAsync(async (req: Request, res: Response) => {
-    await storeStockService.remove(req.params.id as string);
+    await storeStockService.remove(req.user!!, req.params.id as string);
     sendSuccess(res, null, "Store stock deleted");
   }),
 };

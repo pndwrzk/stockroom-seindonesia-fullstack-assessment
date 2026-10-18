@@ -23,7 +23,7 @@ const assertCanSubmit = (status: number): void => {
   if (
     status !== OPNAME_STATUS.INITIATED &&
     status !== OPNAME_STATUS.IN_PROGRESS &&
-    status !== OPNAME_STATUS.REJECTED
+    status !== OPNAME_STATUS.NEEDS_REVISION
   ) {
     throw new ApiError(409, "Stock opname is not accepting counted quantities");
   }
@@ -122,7 +122,7 @@ export const stockOpnameService = {
       }
     }
 
-    return stockOpnameRepository.create({
+    const created = await stockOpnameRepository.createIfNoActive({
       sessionNumber: `${store.code}-${new Date()
         .toISOString()
         .replace(/[-:.]/g, "")}`,
@@ -135,6 +135,12 @@ export const stockOpnameService = {
         systemQty: s.quantity,
       })),
     });
+    // Pengecekan di atas hanya untuk gagal cepat; yang menjamin tidak ada dua
+    // sesi aktif adalah pengecekan di dalam transaksi (lihat repository).
+    if (!created) {
+      throw new ApiError(409, "This store already has an active stock opname");
+    }
+    return created;
   },
 
   async findAll(actor: AuthUser, query: ListStockOpnameQuery) {
@@ -171,6 +177,7 @@ export const stockOpnameService = {
   async findById(actor: AuthUser, id: string): Promise<StockOpnameResponse> {
     const opname = await stockOpnameRepository.findById(id);
     if (!opname) throw new ApiError(404, "Stock opname not found");
+    assertCanAccessStore(actor, opname.store.id);
     return opname;
   },
 
@@ -200,6 +207,7 @@ export const stockOpnameService = {
   }> {
     const opname = await stockOpnameRepository.findStoreIdById(id);
     if (!opname) throw new ApiError(404, "Stock opname not found");
+    assertCanAccessStore(actor, opname.storeId);
     const { items, total } = await stockOpnameRepository.findItems(
       id,
       query.page,
@@ -233,50 +241,29 @@ export const stockOpnameService = {
       );
 
       await repository.updateCountedQuantities(id, dto.items);
-      let status = opname.status;
-      let noteRecorded = false;
-      if (status !== OPNAME_STATUS.IN_PROGRESS) {
+      const remainingCount = await repository.countUncountedItems(id);
+      const status =
+        remainingCount === 0
+          ? OPNAME_STATUS.SUBMITTED
+          : OPNAME_STATUS.IN_PROGRESS;
+
+      if (status !== opname.status) {
         const updated = await repository.updateStatus(
           id,
+          opname.status,
           status,
-          OPNAME_STATUS.IN_PROGRESS,
         );
         if (!updated) {
           throw new ApiError(409, "Stock opname status changed; please retry");
         }
         await repository.createHistory({
           opnameId: id,
-          fromStatus: status,
-          toStatus: OPNAME_STATUS.IN_PROGRESS,
+          fromStatus: opname.status,
+          toStatus: status,
           userId: actor.id,
           note: dto.note,
         });
-        noteRecorded = dto.note !== undefined;
-        status = OPNAME_STATUS.IN_PROGRESS;
-      }
-
-      const remainingCount = await repository.countUncountedItems(id);
-      if (remainingCount === 0) {
-        const updated = await repository.updateStatus(
-          id,
-          OPNAME_STATUS.IN_PROGRESS,
-          OPNAME_STATUS.SUBMITTED,
-        );
-        if (!updated) {
-          throw new ApiError(409, "Stock opname status changed; please retry");
-        }
-        await repository.createHistory({
-          opnameId: id,
-          fromStatus: OPNAME_STATUS.IN_PROGRESS,
-          toStatus: OPNAME_STATUS.SUBMITTED,
-          userId: actor.id,
-          note: noteRecorded ? undefined : dto.note,
-        });
-        noteRecorded = noteRecorded || dto.note !== undefined;
-        status = OPNAME_STATUS.SUBMITTED;
-      }
-
-      if (dto.note !== undefined && !noteRecorded) {
+      } else if (dto.note !== undefined) {
         await repository.createHistory({
           opnameId: id,
           fromStatus: status,
@@ -297,7 +284,10 @@ export const stockOpnameService = {
   async review(
     actor: AuthUser,
     id: string,
-    status: typeof OPNAME_STATUS.APPROVED | typeof OPNAME_STATUS.REJECTED,
+    status:
+      | typeof OPNAME_STATUS.APPROVED
+      | typeof OPNAME_STATUS.REJECTED
+      | typeof OPNAME_STATUS.NEEDS_REVISION,
     dto: ReviewStockOpnameDto,
   ): Promise<StockOpnameResponse> {
     await stockOpnameRepository.transaction(async (repository) => {

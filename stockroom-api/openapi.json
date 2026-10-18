@@ -609,7 +609,7 @@
       "get": {
         "tags": ["Stock Opnames"],
         "summary": "Count stock opnames by status",
-        "description": "OWNER receives global counts. MANAGER and STAFF receive counts scoped to their own store. Status: 0 INITIATED, 1 IN_PROGRESS, 2 SUBMITTED, 3 APPROVED, 4 REJECTED.",
+        "description": "OWNER receives global counts. MANAGER and STAFF receive counts scoped to their own store. Status: 0 INITIATED, 1 IN_PROGRESS, 2 SUBMITTED, 3 APPROVED, 4 REJECTED, 5 NEEDS_REVISION.",
         "responses": {
           "200": {
             "description": "Counts for every status",
@@ -647,7 +647,7 @@
           {
             "name": "status",
             "in": "query",
-            "schema": { "type": "integer", "enum": [0, 1, 2, 3, 4] }
+            "schema": { "type": "integer", "enum": [0, 1, 2, 3, 4, 5] }
           },
           {
             "name": "storeId",
@@ -758,7 +758,7 @@
       "patch": {
         "tags": ["Stock Opnames"],
         "summary": "Submit counted quantities",
-        "description": "Route middleware currently permits STAFF. Multiple products can be submitted at once. Optional note is recorded in history. First submission changes status to IN_PROGRESS; when every item has countedQty, status changes to SUBMITTED. REJECTED opnames can be resubmitted.",
+        "description": "Route middleware currently permits STAFF. Multiple products can be submitted at once. Optional note is recorded in history. First submission changes status to IN_PROGRESS; when every item has countedQty, status changes to SUBMITTED. NEEDS_REVISION opnames can be recounted and submitted again. REJECTED opnames are closed and cannot be resubmitted.",
         "requestBody": {
           "required": true,
           "content": {
@@ -813,12 +813,42 @@
         }
       }
     },
+    "/stock-opnames/{id}/request-revision": {
+      "parameters": [{ "$ref": "#/components/parameters/UuidId" }],
+      "post": {
+        "tags": ["Stock Opnames"],
+        "summary": "Return stock opname for revision",
+        "description": "OWNER or MANAGER; MANAGER can review only opnames for their own store. Only SUBMITTED opnames can be returned. Status becomes NEEDS_REVISION and STAFF can recount and submit again. A note explaining what to fix is required.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ReviewInput" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Stock opname returned for revision",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/StockOpnameResponse" }
+              }
+            }
+          },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      }
+    },
     "/stock-opnames/{id}/reject": {
       "parameters": [{ "$ref": "#/components/parameters/UuidId" }],
       "post": {
         "tags": ["Stock Opnames"],
         "summary": "Reject stock opname",
-        "description": "OWNER or MANAGER; MANAGER can review only opnames for their own store. Only SUBMITTED opnames can be rejected.",
+        "description": "OWNER or MANAGER; MANAGER can review only opnames for their own store. Only SUBMITTED opnames can be rejected. Rejecting closes the session permanently; a note is required.",
         "requestBody": {
           "required": true,
           "content": {
@@ -865,7 +895,7 @@
       "delete": {
         "tags": ["Stock Opnames"],
         "summary": "Delete stock opname",
-        "description": "OWNER only. Deletion is allowed only for INITIATED, REJECTED, or APPROVED status.",
+        "description": "OWNER only. Deletion is allowed for any status except APPROVED.",
         "responses": {
           "200": { "$ref": "#/components/responses/Deleted" },
           "403": { "$ref": "#/components/responses/Forbidden" },
@@ -1259,7 +1289,7 @@
           "sessionNumber": { "type": "string" },
           "storeId": { "type": "string", "format": "uuid" },
           "scope": { "type": "integer", "enum": [0, 1] },
-          "status": { "type": "integer", "enum": [0, 1, 2, 3, 4] },
+          "status": { "type": "integer", "enum": [0, 1, 2, 3, 4, 5] },
           "initiatedBy": { "type": "string", "format": "uuid" },
           "initiatedAt": { "type": "string", "format": "date-time" },
           "createdAt": { "type": "string", "format": "date-time" },
@@ -1417,7 +1447,7 @@
         "type": "object",
         "required": ["status", "total"],
         "properties": {
-          "status": { "type": "integer", "enum": [0, 1, 2, 3, 4] },
+          "status": { "type": "integer", "enum": [0, 1, 2, 3, 4, 5] },
           "total": { "type": "integer" }
         }
       },

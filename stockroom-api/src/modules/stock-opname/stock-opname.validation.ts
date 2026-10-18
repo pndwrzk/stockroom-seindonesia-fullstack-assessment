@@ -73,3 +73,8 @@ export const submitStockOpnameItemsSchema = z.object({
 export const reviewStockOpnameSchema = z.object({
   note: z.string().trim().max(1000).optional(),
 });
+
+
+export const reviewWithRequiredNoteSchema = z.object({
+  note: z.string().trim().min(1, "note is required").max(1000),
+});

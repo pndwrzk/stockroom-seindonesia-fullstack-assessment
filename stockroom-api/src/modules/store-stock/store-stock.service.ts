@@ -68,8 +68,14 @@ export const storeStockService = {
 
   findById: (id: string): Promise<StoreStockDetail> => getOrFail(id),
 
-  async remove(id: string): Promise<void> {
-    await getOrFail(id);
+  async remove(actor: AuthUser, id: string): Promise<void> {
+    const stock = await getOrFail(id);
+    if (actor.role === ROLES.MANAGER && actor.storeId !== stock.storeId) {
+      throw new ApiError(
+        403,
+        "You are not authorized to delete store stock for this store",
+      );
+    }
     await storeStockRepository.delete(id);
   },
 };

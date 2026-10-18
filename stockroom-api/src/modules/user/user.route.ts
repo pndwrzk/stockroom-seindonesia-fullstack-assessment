@@ -26,7 +26,15 @@ router
 router
   .route("/:id")
   .get(validate({ params: userIdParamSchema }), userController.findById)
-  .patch(validate({ params: userIdParamSchema, body: updateUserSchema }), userController.update)
-  .delete(validate({ params: userIdParamSchema }), userController.remove);
+  .patch(
+    authorize(ROLES.OWNER, ROLES.MANAGER),
+    validate({ params: userIdParamSchema, body: updateUserSchema }),
+    userController.update,
+  )
+  .delete(
+    authorize(ROLES.OWNER),
+    validate({ params: userIdParamSchema }),
+    userController.remove,
+  );
 
 export default router;

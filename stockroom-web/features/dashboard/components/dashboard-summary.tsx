@@ -9,6 +9,7 @@ import {
   CircleX,
   Clock3,
   Package,
+  RotateCcw,
   Send,
   Store,
   UsersRound,
@@ -60,6 +61,13 @@ const stockOpnameStatuses = [
     icon: CircleX,
     color: "text-destructive",
     background: "bg-destructive/10",
+  },
+  {
+    status: stockOpnameStatus.NEEDS_REVISION,
+    label: "Needs revision",
+    icon: RotateCcw,
+    color: "text-orange-700",
+    background: "bg-orange-50",
   },
 ] as const;
 
@@ -337,7 +345,7 @@ export function DashboardSummary() {
               {summary.stockOpnameError}
             </p>
           ) : (
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
               {stockOpnameStatuses.map(
                 ({ status, label, icon: Icon, color, background }) => (
                   <Card

@@ -67,6 +67,16 @@ export const stockOpnameController = {
     sendSuccess(res, opname, "Stock opname approved");
   }),
 
+  requestRevision: catchAsync(async (req: Request, res: Response) => {
+    const opname = await stockOpnameService.review(
+      req.user!!,
+      req.params.id as string,
+      OPNAME_STATUS.NEEDS_REVISION,
+      req.body as ReviewStockOpnameDto,
+    );
+    sendSuccess(res, opname, "Stock opname returned for revision");
+  }),
+
   reject: catchAsync(async (req: Request, res: Response) => {
     const opname = await stockOpnameService.review(
       req.user!!,

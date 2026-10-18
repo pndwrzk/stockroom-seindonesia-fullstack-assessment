@@ -43,6 +43,18 @@ const assertRoleStoreRule = async (role: Role, storeId: string | null, exceptUse
   }
 };
 
+
+const assertCanAccessUser = (actor: AuthUser, target: UserWithStore): void => {
+  if (actor.role === ROLES.OWNER) return;
+  if (
+    !actor.storeId ||
+    target.storeId !== actor.storeId ||
+    target.role === ROLES.OWNER
+  ) {
+    throw new ApiError(403, "You are not authorized to access this user");
+  }
+};
+
 export const userService = {
   async count(actor: AuthUser) {
     let storeId: string | undefined;
@@ -91,10 +103,28 @@ export const userService = {
     };
   },
 
-  findById: (id: string): Promise<UserWithStore> => getOrFail(id),
+  async findById(actor: AuthUser, id: string): Promise<UserWithStore> {
+    const user = await getOrFail(id);
+    assertCanAccessUser(actor, user);
+    return user;
+  },
 
-  async update(id: string, dto: UpdateUserDto): Promise<UserWithStore> {
+  async update(
+    actor: AuthUser,
+    id: string,
+    dto: UpdateUserDto,
+  ): Promise<UserWithStore> {
     const current = await getOrFail(id);
+    assertCanAccessUser(actor, current);
+
+    if (actor.role === ROLES.MANAGER) {
+      if (dto.role === ROLES.OWNER) {
+        throw new ApiError(403, "You are not authorized to assign the OWNER role");
+      }
+      if (dto.storeId !== undefined && dto.storeId !== actor.storeId) {
+        throw new ApiError(403, "You are not authorized to move a user to another store");
+      }
+    }
 
     if (dto.nik) await assertNikAvailable(dto.nik, id);
     if (dto.username) await assertUsernameAvailable(dto.username, id);

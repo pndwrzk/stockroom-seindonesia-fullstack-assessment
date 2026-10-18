@@ -1,5 +1,5 @@
-import app from "./app";
 import { env, prisma } from "./config";
+import app from "./app";
 
 const server = app.listen(env.port, () => {
   console.log(`Server running on http://localhost:${env.port}`);

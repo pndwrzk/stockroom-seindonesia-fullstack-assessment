@@ -8,6 +8,7 @@ export const stockOpnameStatusSchema = z.union([
   z.literal(stockOpnameStatus.SUBMITTED),
   z.literal(stockOpnameStatus.APPROVED),
   z.literal(stockOpnameStatus.REJECTED),
+  z.literal(stockOpnameStatus.NEEDS_REVISION),
 ]);
 
 export const stockOpnameRecordSchema = z.object({

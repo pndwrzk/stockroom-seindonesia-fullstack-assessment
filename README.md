@@ -4,15 +4,15 @@ Run the web app, API, and PostgreSQL with Docker Compose.
 
 ## Start
 
-Make sure `stockroom-api/.env` contains `JWT_ACCESS_SECRET` and `JWT_REFRESH_SECRET`, and `stockroom-web/.env` sets `NEXT_PUBLIC_API_URL=http://localhost:8080`.
+Make sure `stockroom-api/.env` contains `JWT_ACCESS_SECRET` and `JWT_REFRESH_SECRET`, and `stockroom-web/.env` sets `NEXT_PUBLIC_API_URL=http://localhost:3000`.
 
 ```bash
 docker compose up --build
 ```
 
 - Web: http://localhost:3000
-- API: http://localhost:8080/api/v1
-- API docs: http://localhost:8080/api-docs
+- API: http://localhost:3000/api/v1
+- API docs: http://localhost:3000/api-docs
 
 The API applies the database schema and runs the seed before starting.
 

@@ -10,6 +10,7 @@ export const OPNAME_STATUS = {
   SUBMITTED: 2,
   APPROVED: 3,
   REJECTED: 4,
+  NEEDS_REVISION: 5,
 } as const;
 export type OpnameStatus = (typeof OPNAME_STATUS)[keyof typeof OPNAME_STATUS];
 
@@ -17,6 +18,7 @@ export const ACTIVE_OPNAME_STATUSES: OpnameStatus[] = [
   OPNAME_STATUS.INITIATED,
   OPNAME_STATUS.IN_PROGRESS,
   OPNAME_STATUS.SUBMITTED,
+  OPNAME_STATUS.NEEDS_REVISION,
 ];
 
 export const isValidOpnameScope = (v: unknown): v is OpnameScope =>

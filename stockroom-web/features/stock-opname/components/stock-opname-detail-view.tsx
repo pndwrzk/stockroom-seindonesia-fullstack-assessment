@@ -45,6 +45,7 @@ const statusLabels: Record<StockOpnameDetail["status"], string> = {
   [stockOpnameStatus.SUBMITTED]: "Submitted",
   [stockOpnameStatus.APPROVED]: "Approved",
   [stockOpnameStatus.REJECTED]: "Rejected",
+  [stockOpnameStatus.NEEDS_REVISION]: "Needs revision",
 };
 
 const statusStyles: Record<StockOpnameDetail["status"], string> = {
@@ -53,6 +54,7 @@ const statusStyles: Record<StockOpnameDetail["status"], string> = {
   [stockOpnameStatus.SUBMITTED]: "bg-amber-100 text-amber-800",
   [stockOpnameStatus.APPROVED]: "bg-green-100 text-green-800",
   [stockOpnameStatus.REJECTED]: "bg-red-100 text-red-800",
+  [stockOpnameStatus.NEEDS_REVISION]: "bg-orange-100 text-orange-800",
 };
 
 const scopeLabels: Record<StockOpnameDetail["scope"], string> = {
@@ -94,6 +96,7 @@ export function StockOpnameDetailView({
     string | null
   >(null);
   const [countNote, setCountNote] = useState("");
+  const [isSubmitDialogOpen, setIsSubmitDialogOpen] = useState(false);
   const [reviewAction, setReviewAction] =
     useState<StockOpnameReviewAction | null>(null);
   const [reviewNote, setReviewNote] = useState("");
@@ -108,7 +111,7 @@ export function StockOpnameDetailView({
     }) &&
     (detail?.status === stockOpnameStatus.INITIATED ||
       detail?.status === stockOpnameStatus.IN_PROGRESS ||
-      detail?.status === stockOpnameStatus.REJECTED);
+      detail?.status === stockOpnameStatus.NEEDS_REVISION);
   const canReview =
     hasPermission(user?.role, {
       module: "STOCK_OPNAME",
@@ -119,8 +122,17 @@ export function StockOpnameDetailView({
       action: "REJECT",
     }) &&
     detail?.status === stockOpnameStatus.SUBMITTED;
+  const canRequestRevision =
+    canReview &&
+    hasPermission(user?.role, {
+      module: "STOCK_OPNAME",
+      action: "REQUEST_REVISION",
+    });
 
-  const submitCountedItems = async () => {
+  const isReviewNoteRequired =
+    reviewAction === "reject" || reviewAction === "request-revision";
+
+  const getSubmittedCounts = () => {
     const submittedCounts = new Map<string, number>();
 
     for (const [productId, value] of Object.entries(countedQtyDrafts)) {
@@ -131,7 +143,7 @@ export function StockOpnameDetailView({
       const countedQty = Number(value);
       if (!Number.isInteger(countedQty) || countedQty < 0) {
         setCountValidationError("Enter a whole number zero or greater.");
-        return;
+        return null;
       }
       submittedCounts.set(productId, countedQty);
     }
@@ -147,21 +159,43 @@ export function StockOpnameDetailView({
 
     if (submittedCounts.size === 0) {
       setCountValidationError("Enter a counted quantity for at least one product.");
-      return;
+      return null;
     }
 
     setCountValidationError(null);
-    await submitItems({
-      items: Array.from(submittedCounts, ([productId, countedQty]) => ({
-        productId,
-        countedQty,
-      })),
+    return Array.from(submittedCounts, ([productId, countedQty]) => ({
+      productId,
+      countedQty,
+    }));
+  };
+
+  const openSubmitDialog = () => {
+    if (getSubmittedCounts()) {
+      setIsSubmitDialogOpen(true);
+    }
+  };
+
+  const submitCountedItems = async () => {
+    const submittedCounts = getSubmittedCounts();
+    if (!submittedCounts) {
+      return;
+    }
+
+    const succeeded = await submitItems({
+      items: submittedCounts,
       ...(countNote.trim() ? { note: countNote.trim() } : {}),
     });
+    if (succeeded) {
+      setIsSubmitDialogOpen(false);
+      setCountNote("");
+    }
   };
 
   const submitReview = async () => {
     if (!reviewAction) {
+      return;
+    }
+    if (isReviewNoteRequired && !reviewNote.trim()) {
       return;
     }
 
@@ -348,17 +382,6 @@ export function StockOpnameDetailView({
               />
               {canCountItems && (
                 <div className="mt-4 space-y-3">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="stock-opname-count-note">Note</Label>
-                    <Textarea
-                      id="stock-opname-count-note"
-                      value={countNote}
-                      onChange={(event) => setCountNote(event.target.value)}
-                      disabled={isSubmitting}
-                      placeholder="Add a note about the counted quantities (optional)"
-                      rows={3}
-                    />
-                  </div>
                   <div className="flex flex-col items-end gap-2">
                     {countValidationError && (
                       <p role="alert" className="text-xs text-destructive">
@@ -368,11 +391,11 @@ export function StockOpnameDetailView({
                     <Button
                       type="button"
                       disabled={isSubmitting || isLoadingItems || items.length === 0}
-                      onClick={() => void submitCountedItems()}
+                      onClick={openSubmitDialog}
                     >
                       {isSubmitting
                         ? "Submitting..."
-                        : detail.status === stockOpnameStatus.REJECTED
+                        : detail.status === stockOpnameStatus.NEEDS_REVISION
                           ? "Resubmit"
                           : "Submit"}
                     </Button>
@@ -433,6 +456,16 @@ export function StockOpnameDetailView({
               >
                 Reject
               </Button>
+              {canRequestRevision && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={isReviewing}
+                  onClick={() => setReviewAction("request-revision")}
+                >
+                  Request revision
+                </Button>
+              )}
               <Button
                 type="button"
                 disabled={isReviewing}
@@ -444,6 +477,60 @@ export function StockOpnameDetailView({
           )}
         </>
       )}
+
+      <Dialog
+        open={isSubmitDialogOpen}
+        onOpenChange={(open) => {
+          if (!open && !isSubmitting) {
+            setIsSubmitDialogOpen(false);
+          }
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {detail?.status === stockOpnameStatus.NEEDS_REVISION
+                ? "Resubmit stock opname?"
+                : "Submit stock opname?"}
+            </DialogTitle>
+            <DialogDescription>
+              Add an optional note about the counted quantities.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-1.5">
+            <Label htmlFor="stock-opname-count-note">Note</Label>
+            <Textarea
+              id="stock-opname-count-note"
+              value={countNote}
+              onChange={(event) => setCountNote(event.target.value)}
+              disabled={isSubmitting}
+              placeholder="Enter a note (optional)"
+              rows={3}
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isSubmitting}
+              onClick={() => setIsSubmitDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              disabled={isSubmitting}
+              onClick={() => void submitCountedItems()}
+            >
+              {isSubmitting
+                ? "Submitting..."
+                : detail?.status === stockOpnameStatus.NEEDS_REVISION
+                  ? "Resubmit"
+                  : "Submit"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog
         open={reviewAction !== null}
@@ -459,10 +546,16 @@ export function StockOpnameDetailView({
             <DialogTitle>
               {reviewAction === "approve"
                 ? "Approve stock opname?"
-                : "Reject stock opname?"}
+                : reviewAction === "request-revision"
+                  ? "Request revision?"
+                  : "Reject stock opname?"}
             </DialogTitle>
             <DialogDescription>
-              Add an optional note for this decision.
+              {reviewAction === "approve"
+                ? "Add an optional note for this decision."
+                : reviewAction === "request-revision"
+                  ? "Staff can recount and submit again. Explain what needs to be fixed."
+                  : "Rejecting closes this stock opname permanently and staff cannot resubmit it. Explain the reason."}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-1.5">
@@ -472,7 +565,9 @@ export function StockOpnameDetailView({
               value={reviewNote}
               onChange={(event) => setReviewNote(event.target.value)}
               disabled={isReviewing}
-              placeholder="Enter a note (optional)"
+              placeholder={
+                isReviewNoteRequired ? "Enter a note (required)" : "Enter a note (optional)"
+              }
               rows={3}
             />
           </div>
@@ -491,14 +586,20 @@ export function StockOpnameDetailView({
             <Button
               type="button"
               variant={reviewAction === "reject" ? "destructive" : "default"}
-              disabled={isReviewing || reviewAction === null}
+              disabled={
+                isReviewing ||
+                reviewAction === null ||
+                (isReviewNoteRequired && !reviewNote.trim())
+              }
               onClick={() => void submitReview()}
             >
               {isReviewing
                 ? "Submitting..."
                 : reviewAction === "approve"
                   ? "Approve"
-                  : "Reject"}
+                  : reviewAction === "request-revision"
+                    ? "Request revision"
+                    : "Reject"}
             </Button>
           </DialogFooter>
         </DialogContent>

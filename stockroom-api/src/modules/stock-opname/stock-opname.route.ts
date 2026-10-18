@@ -8,6 +8,7 @@ import {
   listStockOpnameItemsQuerySchema,
   listStockOpnameQuerySchema,
   reviewStockOpnameSchema,
+  reviewWithRequiredNoteSchema,
   stockOpnameIdParamSchema,
   submitStockOpnameItemsSchema,
 } from "./stock-opname.validation";
@@ -55,11 +56,21 @@ router.post(
 );
 
 router.post(
+  "/:id/request-revision",
+  authorize(ROLES.OWNER, ROLES.MANAGER),
+  validate({
+    params: stockOpnameIdParamSchema,
+    body: reviewWithRequiredNoteSchema,
+  }),
+  stockOpnameController.requestRevision,
+);
+
+router.post(
   "/:id/reject",
   authorize(ROLES.OWNER, ROLES.MANAGER),
   validate({
     params: stockOpnameIdParamSchema,
-    body: reviewStockOpnameSchema,
+    body: reviewWithRequiredNoteSchema,
   }),
   stockOpnameController.reject,
 );

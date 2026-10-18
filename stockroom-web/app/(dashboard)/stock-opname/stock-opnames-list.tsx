@@ -44,6 +44,7 @@ const statusLabels: Record<StockOpnameRecord["status"], string> = {
   [stockOpnameStatus.SUBMITTED]: "Submitted",
   [stockOpnameStatus.APPROVED]: "Approved",
   [stockOpnameStatus.REJECTED]: "Rejected",
+  [stockOpnameStatus.NEEDS_REVISION]: "Needs revision",
 };
 
 const statusStyles: Record<StockOpnameRecord["status"], string> = {
@@ -52,6 +53,7 @@ const statusStyles: Record<StockOpnameRecord["status"], string> = {
   [stockOpnameStatus.SUBMITTED]: "bg-amber-100 text-amber-800",
   [stockOpnameStatus.APPROVED]: "bg-green-100 text-green-800",
   [stockOpnameStatus.REJECTED]: "bg-red-100 text-red-800",
+  [stockOpnameStatus.NEEDS_REVISION]: "bg-orange-100 text-orange-800",
 };
 
 const scopeLabels: Record<StockOpnameRecord["scope"], string> = {

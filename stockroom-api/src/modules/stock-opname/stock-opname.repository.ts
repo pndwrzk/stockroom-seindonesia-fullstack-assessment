@@ -210,25 +210,41 @@ export const stockOpnameRepository = {
     );
   },
 
-  create(data: CreateStockOpnameData): Promise<StockOpnameDetail> {
-    return prisma.stockOpname.create({
-      data: {
-        sessionNumber: data.sessionNumber,
-        storeId: data.storeId,
-        scope: data.scope,
-        initiatedBy: data.initiatedBy,
-        items: { create: data.items },
-        histories: {
-          create: {
-            fromStatus: null,
-            toStatus: OPNAME_STATUS.INITIATED,
-            userId: data.initiatedBy,
-            note: data.note,
+
+  createIfNoActive(
+    data: CreateStockOpnameData,
+  ): Promise<StockOpnameDetail | null> {
+    return prisma.$transaction(
+      async (tx) => {
+        await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${data.storeId}::text))`;
+
+        const active = await tx.stockOpname.findFirst({
+          where: { storeId: data.storeId, status: { in: ACTIVE_OPNAME_STATUSES } },
+          select: { id: true },
+        });
+        if (active) return null;
+
+        return tx.stockOpname.create({
+          data: {
+            sessionNumber: data.sessionNumber,
+            storeId: data.storeId,
+            scope: data.scope,
+            initiatedBy: data.initiatedBy,
+            items: { create: data.items },
+            histories: {
+              create: {
+                fromStatus: null,
+                toStatus: OPNAME_STATUS.INITIATED,
+                userId: data.initiatedBy,
+                note: data.note,
+              },
+            },
           },
-        },
+          include: createInclude,
+        });
       },
-      include: createInclude,
-    });
+      { timeout: 15000 },
+    );
   },
 
   findActiveByStore(storeId: string): Promise<{ id: string } | null> {
